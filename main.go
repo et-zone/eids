@@ -2,25 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/et-zone/eids/conf"
 	"github.com/et-zone/eids/public"
-	"github.com/sony/sonyflake"
 	"net/http"
 )
 
-var sf *sonyflake.Sonyflake
-
-func init() {
-
-}
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	id, err := sf.NextID()
+	id, err := public.GetCli().NextID()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	body, err := json.Marshal(sonyflake.Decompose(id))
+	body, err := json.Marshal(public.Decompose(id))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -31,12 +25,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	var st sonyflake.Settings
-	st.MachineID = public.MachineID
-	sf = sonyflake.NewSonyflake(st)
-	if sf == nil {
-		panic("sonyflake not created")
-	}
+	conf.InitConf()
+	public.InitIDS()
 	http.HandleFunc("/ids", handler)
 	http.ListenAndServe(":9001", nil)
 }
