@@ -57,7 +57,7 @@ func RunServ (machineID,port int)error{
 		log.Fatalf("RunServ err , machineID can not < 0 ")
 		return errors.New("RunServ err , machineID can not < 0 ")
 	}
-	err:=sonyflake.EIDCliet.InitSonyFlake(machineID)
+	err:=sonyflake.EIDCliet.InitSonyFlake(int32(machineID))
 	if err!=nil{
 		log.Fatalf("RunServ err , failed to InitSonyFlake : %v", err)
 		return err
