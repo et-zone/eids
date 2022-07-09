@@ -45,7 +45,7 @@ func run(port int)error{
 		return err
 	}
 	pb.RegisterIDsInterfaceServer(s, &Srv{})
-	log.Printf("server listening at %v", lis.Addr())
+	log.Printf("eids server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
 		log.Printf("failed to serve: %v", err)
 	}

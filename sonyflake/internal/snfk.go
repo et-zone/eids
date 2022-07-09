@@ -8,7 +8,6 @@ package internal
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -79,7 +78,7 @@ func newSonyflake(st Settings) *Sonyflake {
 	if err != nil || (st.CheckMachineID != nil && !st.CheckMachineID(sf.machineID)) {
 		return nil
 	}
-	fmt.Println("machineID=",sf.machineID)
+	//fmt.Println("machineID=",sf.machineID)
 	return sf
 }
 

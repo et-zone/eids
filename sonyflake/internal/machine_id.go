@@ -3,9 +3,8 @@ package internal
 var mID *int32
 
 func InitMachineID(machine_id int32){
-	if machineID==nil{
-		tmp:=machine_id
-		mID=&tmp
+	if mID==nil{
+		mID=&machine_id
 	}
 }
 
