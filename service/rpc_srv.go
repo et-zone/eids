@@ -19,7 +19,7 @@ func (s *Srv)GetID(ctx context.Context, req *pb.Request) (res *pb.ResponseID,err
 	res=&pb.ResponseID{
 		Code: pb.Code_SUCC,
 	}
-	res.ID,err= sonyflake.EIDCliet.NextID()
+	res.ID,err= sonyflake.NextID()
 	if err!=nil{
 		res.Code=pb.Code_FIELD
 		return
