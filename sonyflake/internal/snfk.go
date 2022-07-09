@@ -20,10 +20,14 @@ const (
 	BitLenSequence  = 13                               // bit length of sequence number
 	BitLenMachineID = 63 - BitLenTime - BitLenSequence // bit length of machine id
 )
-const Size_18 int64 = 1e7
-const Size_19 int64 = 1e6
+const byteSize_e7 int64 = 1e7 //18
+const byteSize_e6 int64 = 1e6 //19
+const (
+	b_e18="b_18"
+	b_e19="b_19"
+)
 
-var sonyflakeTimeUnit = Size_18
+var sonyflakeTimeUnit = byteSize_e7
 
 //const sonyflakeTimeUnit = 1e7 // nsec, i.e. 10 msec     size=18 count ~ 70
 //const sonyflakeTimeUnit = 1e6 // nsec, i.e. 10 msec   size=19 count ~ 500

@@ -29,3 +29,15 @@ func MachineID()(int32,error){
 	}
 	return int32(ids.machineID),nil
 }
+
+func SetByteSzie(byteSize string)(error){
+	if byteSize==b_e18{
+		sonyflakeTimeUnit=byteSize_e7
+		return nil
+	}
+	if byteSize==b_e19{
+		sonyflakeTimeUnit=byteSize_e6
+		return nil
+	}
+	return errors.New("SetByteSzie err , args val err")
+}
