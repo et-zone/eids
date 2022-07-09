@@ -12,7 +12,10 @@ const (
 type eid struct{}
 
 func (e *eid) InitSonyFlake(machineID int32) error {
-	internal.InitMachineID(machineID)
+	err:=internal.InitMachineID(machineID)
+	if err!=nil{
+		return err
+	}
 	return internal.InitSonyflake()
 }
 

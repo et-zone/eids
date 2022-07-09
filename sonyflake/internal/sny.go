@@ -3,6 +3,7 @@ package internal
 import "errors"
 
 var ids *Sonyflake
+
 func InitSonyflake()error{
 	if mID==nil{
 		return errors.New(" init machineID fail")

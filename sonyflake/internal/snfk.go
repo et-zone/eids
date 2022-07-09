@@ -8,29 +8,31 @@ import (
 )
 
 // Package sonyflake implements Sonyflake, a distributed unique ID generator inspired by Twitter's Snowflake.
-//
+// default
 // A Sonyflake ID is composed of
 //     39 bits for time in units of 10 msec
 //      8 bits for a sequence number
 //     16 bits for a machine id
 
+//     different machineID ,get id is different
+
 // These constants are the bit lengths of Sonyflake ID parts.
 const (
 	BitLenTime      = 39                               // bit length of time
-	BitLenSequence  = 13                               // bit length of sequence number
+	BitLenSequence  = 16                               // bit length of sequence number
 	BitLenMachineID = 63 - BitLenTime - BitLenSequence // bit length of machine id
 )
-const byteSize_e7 int64 = 1e7 //18
-const byteSize_e6 int64 = 1e6 //19
+const byteSize_e7 int64 = 1e7 //18   10msec
+const byteSize_e6 int64 = 1e6 //19    1msec
 const (
 	b_e18="b_18"
 	b_e19="b_19"
 )
 
-var sonyflakeTimeUnit = byteSize_e7
+var sonyflakeTimeUnit = byteSize_e6
 
 //const sonyflakeTimeUnit = 1e7 // nsec, i.e. 10 msec     size=18 count ~ 70
-//const sonyflakeTimeUnit = 1e6 // nsec, i.e. 10 msec   size=19 count ~ 500
+//const sonyflakeTimeUnit = 1e6 // nsec, i.e.  1 msec   size=19 count ~ 500
 
 // Settings configures Sonyflake:
 //
@@ -105,7 +107,7 @@ func (sf *Sonyflake) NextID() (uint64, error) {
 
 	sf.mutex.Lock()
 	defer sf.mutex.Unlock()
-
+	Tag:
 	current := currentElapsedTime(sf.startTime)
 	if sf.elapsedTime < current {
 
@@ -113,10 +115,13 @@ func (sf *Sonyflake) NextID() (uint64, error) {
 		sf.sequence = 0
 	} else { // sf.elapsedTime >= current
 		sf.sequence = (sf.sequence + 1) & maskSequence
+		//fmt.Println(sf.sequence)
 		if sf.sequence == 0 {
+			//fmt.Println(sf.sequence)
 			//overtime := sf.elapsedTime - current
 			//time.Sleep(sleepTime((overtime)))
-			time.Sleep(sleepTimeNS((1)))
+			time.Sleep(sleepTimeNS())
+			goto Tag
 		}
 		//fmt.Println(sf.sequence)
 	}
@@ -137,15 +142,16 @@ func sleepTime(overtime int64) time.Duration {
 		time.Duration(time.Now().UTC().UnixNano()%sonyflakeTimeUnit)*time.Nanosecond
 }
 
-func sleepTimeNS(overtime int64) time.Duration {
-	return time.Duration(1*sonyflakeTimeUnit) * time.Nanosecond
+func sleepTimeNS() time.Duration {
+	return time.Duration(20*sonyflakeTimeUnit+10) * time.Nanosecond
 }
+
 
 func (sf *Sonyflake) toID() (uint64, error) {
 	if sf.elapsedTime >= 1<<BitLenTime {
 		return 0, errors.New("over the time limit")
 	}
-
+	//fmt.Println(uint64(sf.elapsedTime)<<(BitLenSequence+BitLenMachineID) ,uint64(sf.sequence)<<BitLenMachineID,uint64(sf.machineID))
 	return uint64(sf.elapsedTime)<<(BitLenSequence+BitLenMachineID) |
 		uint64(sf.sequence)<<BitLenMachineID |
 		uint64(sf.machineID), nil
