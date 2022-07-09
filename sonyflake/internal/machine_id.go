@@ -1,9 +1,17 @@
-package public
+package internal
 
 import (
 	"errors"
 	"github.com/et-zone/eids/conf"
 )
+var mID *int32
+
+func InitMachineID(machine_id int32){
+	if machineID==nil{
+		tmp:=machine_id
+		mID=&tmp
+	}
+}
 
 func machineID()(uint16,error){
 	if conf.ConMsg==nil{
@@ -13,5 +21,8 @@ func machineID()(uint16,error){
 }
 
 func checkMachineID(maid uint16) bool{
-	return maid==uint16(conf.ConMsg.ServID)
+	if mID==nil{
+		return false
+	}
+	return maid==uint16(*mID)
 }

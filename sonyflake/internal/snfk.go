@@ -4,7 +4,7 @@
 //     39 bits for time in units of 10 msec
 //      8 bits for a sequence number
 //     16 bits for a machine id
-package public
+package internal
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ import (
 // These constants are the bit lengths of Sonyflake ID parts.
 const (
 	BitLenTime      = 39                               // bit length of time
-	BitLenSequence  = 13                                // bit length of sequence number
+	BitLenSequence  = 13                               // bit length of sequence number
 	BitLenMachineID = 63 - BitLenTime - BitLenSequence // bit length of machine id
 )
 
@@ -56,7 +56,7 @@ type Sonyflake struct {
 // - Settings.StartTime is ahead of the current time.
 // - Settings.MachineID returns an error.
 // - Settings.CheckMachineID returns false.
-func NewSonyflake(st Settings) *Sonyflake {
+func newSonyflake(st Settings) *Sonyflake {
 	sf := new(Sonyflake)
 	sf.mutex = new(sync.Mutex)
 	sf.sequence = uint16(1<<BitLenSequence - 1)
