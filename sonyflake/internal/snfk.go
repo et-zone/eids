@@ -143,7 +143,7 @@ func sleepTime(overtime int64) time.Duration {
 }
 
 func sleepTimeNS() time.Duration {
-	return time.Duration(20*sonyflakeTimeUnit+10) * time.Nanosecond
+	return time.Duration(10*sonyflakeTimeUnit+10) * time.Nanosecond
 }
 
 
