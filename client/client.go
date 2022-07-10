@@ -3,13 +3,13 @@ package client
 import (
 	"context"
 	"fmt"
+	"time"
 
-	_"github.com/et-zone/eids/sonyflake"
+	_ "github.com/et-zone/eids/sonyflake"
 	pb "github.com/et-zone/proto_api/ids"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
-	"time"
 )
 var cli *client
 
@@ -19,6 +19,7 @@ type client struct {
 	Ctx context.Context
 	Pbclient pb.IDsInterfaceClient
 	ServID int32
+	timeout int
 }
 
 func RunClient(ip string,port ,timeout int)error{
@@ -28,8 +29,9 @@ func RunClient(ip string,port ,timeout int)error{
 		return err
 	}
 	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	cli=&client{Conn: conn, Cancel: cancel, Ctx: ctx, Pbclient: pb.NewIDsInterfaceClient(conn)}
+	//ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
+	cli=&client{Conn: conn, Cancel: cancel, Ctx: ctx, Pbclient: pb.NewIDsInterfaceClient(conn),timeout:timeout}
 	machineID,err:=getServID()
 	if err!=nil{
 		log.Println("init ids err , not connect server")
@@ -51,7 +53,12 @@ func (c *client)Close(){
 }
 
 func NextID()(uint64,error){
-	r,err:=cli.Pbclient.GetID(cli.Ctx,&pb.Request{ServID: &cli.ServID})
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cli.timeout)*time.Second)
+	defer cancel()
+	r,err:=cli.Pbclient.GetID(ctx,&pb.Request{})
+	if r==nil{
+		return 0,err
+	}
 	return r.ID,err
 }
 func getServID()(int32,error){

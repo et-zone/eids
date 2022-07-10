@@ -68,3 +68,7 @@ func RunServ (machineID,port int)error{
 	}
 	return err
 }
+
+func SrvInitSize18 (){
+	sonyflake.EIDCliet.SetByteSzie(sonyflake.B_e18)
+}
