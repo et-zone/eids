@@ -5,8 +5,8 @@ import "github.com/et-zone/eids/sonyflake/internal"
 var EIDCliet EIDs
 
 const (
-	b_e18 = "b_18"
-	b_e19 = "b_19"
+	B_e18 = "b_18"
+	B_e19 = "b_19"
 )
 
 type eid struct{}
@@ -30,7 +30,8 @@ func (e *eid) SetByteSzie(byteSize string) error {
 type EIDs interface {
 	InitSonyFlake(machineID int32) error
 	MachineID() (int32, error)
-	SetByteSzie(byteSize string) error //byteSize is const val
+	// byteSize is const val,before do InitSonyFlake
+	SetByteSzie(byteSize string) error
 }
 
 func init() {
