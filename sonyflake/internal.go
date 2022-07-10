@@ -19,6 +19,10 @@ func (e *eid) InitSonyFlake(machineID int32) error {
 	return internal.InitSonyflake()
 }
 
+func (e *eid) InitSonyFlakeByDefault() error {
+	return internal.InitSonyflakeDefault()
+}
+
 func (e *eid) MachineID() (int32, error) {
 	return internal.MachineID()
 }
@@ -32,6 +36,7 @@ type EIDs interface {
 	MachineID() (int32, error)
 	// byteSize is const val,before do InitSonyFlake
 	SetByteSzie(byteSize string) error
+	InitSonyFlakeByDefault()error
 }
 
 func init() {

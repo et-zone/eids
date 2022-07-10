@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -19,14 +20,14 @@ import (
 // These constants are the bit lengths of Sonyflake ID parts.
 const (
 	BitLenTime      = 39                               // bit length of time
-	BitLenSequence  = 13                              // bit length of sequence number
+	BitLenSequence  = 13                               // bit length of sequence number
 	BitLenMachineID = 63 - BitLenTime - BitLenSequence // bit length of machine id
 )
 const byteSize_e7 int64 = 1e7 //18   10msec
 const byteSize_e6 int64 = 1e6 //19    1msec
 const (
-	b_e18="b_18"
-	b_e19="b_19"
+	b_e18 = "b_18"
+	b_e19 = "b_19"
 )
 
 var sonyflakeTimeUnit = byteSize_e6
@@ -85,7 +86,8 @@ func newSonyflake(st Settings) *Sonyflake {
 
 	var err error
 	if st.MachineID == nil {
-		sf.machineID, err = lower16BitPrivateIP()
+		//sf.machineID, err = lower16BitPrivateIP()
+		sf.machineID, err = lowerPrivateIPv4()
 	} else {
 		sf.machineID, err = st.MachineID()
 	}
@@ -107,7 +109,7 @@ func (sf *Sonyflake) NextID() (uint64, error) {
 
 	sf.mutex.Lock()
 	defer sf.mutex.Unlock()
-	Tag:
+Tag:
 	current := currentElapsedTime(sf.startTime)
 	if sf.elapsedTime < current {
 
@@ -145,7 +147,6 @@ func sleepTime(overtime int64) time.Duration {
 func sleepTimeNS() time.Duration {
 	return time.Duration(1*sonyflakeTimeUnit+10) * time.Nanosecond
 }
-
 
 func (sf *Sonyflake) toID() (uint64, error) {
 	if sf.elapsedTime >= 1<<BitLenTime {
@@ -189,6 +190,15 @@ func lower16BitPrivateIP() (uint16, error) {
 	}
 
 	return uint16(ip[2])<<8 + uint16(ip[3]), nil
+}
+
+func lowerPrivateIPv4() (uint16, error) {
+	ip, err := privateIPv4()
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println(ip[2], ip[3])
+	return uint16(ip[0]) + uint16(ip[1]) + uint16(ip[2]) + uint16(ip[3]), nil
 }
 
 // Decompose returns a set of Sonyflake ID parts.
