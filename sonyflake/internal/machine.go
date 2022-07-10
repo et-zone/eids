@@ -1,14 +1,16 @@
 package internal
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var mID *int32
 
-const MaxNum int32=256
 
 func InitMachineID(machine_id int32)error{
-	if machine_id<0||machine_id>=MaxNum{
-		return errors.New("machineID out of range ,machineID must < 256")
+	if machine_id<0||machine_id>=1<<BitLenMachineID{
+		return errors.New(fmt.Sprintf( "machineID out of range ,machineID must < %v",1<<BitLenMachineID))
 	}
 	if mID==nil{
 		mID=&machine_id
