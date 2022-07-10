@@ -19,7 +19,7 @@ import (
 // These constants are the bit lengths of Sonyflake ID parts.
 const (
 	BitLenTime      = 39                               // bit length of time
-	BitLenSequence  = 16                               // bit length of sequence number
+	BitLenSequence  = 13                              // bit length of sequence number
 	BitLenMachineID = 63 - BitLenTime - BitLenSequence // bit length of machine id
 )
 const byteSize_e7 int64 = 1e7 //18   10msec
@@ -143,7 +143,7 @@ func sleepTime(overtime int64) time.Duration {
 }
 
 func sleepTimeNS() time.Duration {
-	return time.Duration(10*sonyflakeTimeUnit+10) * time.Nanosecond
+	return time.Duration(1*sonyflakeTimeUnit+10) * time.Nanosecond
 }
 
 
