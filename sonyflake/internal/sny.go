@@ -46,9 +46,14 @@ func SetByteSzie(byteSize string) error {
 		sonyflakeTimeUnit = byteSize_e7
 		return nil
 	}
+
 	if byteSize == b_e19 {
 		sonyflakeTimeUnit = byteSize_e6
 		return nil
 	}
 	return errors.New("SetByteSzie err , args val err")
+}
+
+func machineID() (uint16, error) {
+	return uint16(0), nil
 }
