@@ -1,8 +1,8 @@
 package sonyflake
 
 import (
-	"fmt"
 	"github.com/et-zone/eids/sonyflake/internal"
+	"log"
 )
 
 var Cliet EIDs
@@ -16,12 +16,9 @@ type eid struct{
 	*internal.Sonyflake
 }
 
-func InitSonyFlake(machineID int32) error {
-	err:=internal.InitMachineID(machineID)
-	if err!=nil{
-		return err
-	}
-	client,err:=internal.InitSonyflake()
+func InitSonyFlake(machineID *uint16) error {
+
+	client,err:=internal.InitSonyflake(machineID)
 	if err!=nil{
 		return err
 	}
@@ -29,23 +26,20 @@ func InitSonyFlake(machineID int32) error {
 	return nil
 }
 
-func InitSonyFlakeWithSzie(machineID int32,id_size string) error {
-	err:=internal.InitMachineID(machineID)
-	if err!=nil{
-		return err
-	}
-	err=internal.SetByteSzie(id_size)
+func InitSonyFlakeWithSzie(machineID *uint16,id_size string) error {
+	err:=internal.SetByteSzie(id_size)
 	if err!=nil{
 		return err
 	}
 
-	client,err:=internal.InitSonyflake()
+	client,err:=internal.InitSonyflake(machineID)
 	if err!=nil{
 		return err
 	}
 
 	Cliet=&eid{client}
-	fmt.Printf("eids init succ ")
+
+	log.Println("eids init succ ")
 	return nil
 }
 

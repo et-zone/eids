@@ -2,7 +2,6 @@ package internal
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -203,7 +202,7 @@ func lowerPrivateIPv4() (uint16, error) {
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println(ip[2], ip[3])
+	//fmt.Println(ip[2], ip[3])
 	return uint16(ip[0]) + uint16(ip[1]) + uint16(ip[2]) + uint16(ip[3]), nil
 }
 
