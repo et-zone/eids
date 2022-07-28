@@ -6,55 +6,43 @@ import (
 	"log"
 )
 
-var ids *Sonyflake
+//var ids *Sonyflake
 
-func InitSonyflake()error{
+func InitSonyflake()(*Sonyflake,error){
 	if mID==nil{
-		return errors.New(" init machineID fail")
+		return nil,errors.New(" init machineID fail")
 	}
 	st := Settings{
 		MachineID:      machineID,
 		CheckMachineID: checkMachineID,
 	}
-	ids = newSonyflake(st)
+	ids := newSonyflake(st)
 	if ids == nil {
-		return errors.New("sonyflake not created")
+		return nil,errors.New("sonyflake not created")
 	}
 	log.Println("ids machineID = ",ids.machineID)
 	if ids.machineID<0||ids.machineID>=1<<BitLenMachineID{
-		return errors.New(fmt.Sprintf( "machineID out of range ,machineID must < %v",1<<BitLenMachineID))
+		return nil,errors.New(fmt.Sprintf( "machineID out of range ,machineID must < %v",1<<BitLenMachineID))
 	}
-	return nil
+	return ids,nil
 }
 
-func InitSonyflakeDefault()error{
+func InitSonyflakeDefault()(*Sonyflake,error){
 	st := Settings{}
-	ids = newSonyflake(st)
+	ids := newSonyflake(st)
 	if ids == nil {
-		return errors.New("sonyflake not created")
+		return nil,errors.New("sonyflake not created")
 	}
 	log.Println("ids machineID = ",ids.machineID)
 	mid:=int32(ids.machineID)
 	mID=&mid
 	if ids.machineID<0||ids.machineID>=1<<BitLenMachineID{
-		return errors.New(fmt.Sprintf( "machineID out of range ,machineID must < %v",1<<BitLenMachineID))
+		return nil,errors.New(fmt.Sprintf( "machineID out of range ,machineID must < %v",1<<BitLenMachineID))
 	}
-	return nil
+	return ids,nil
 }
 
 
-func NexitID()(uint64,error){
-	if ids==nil{
-		return 0,errors.New("sonyflake not created")
-	}
-	return ids.NextID()
-}
-func MachineID()(int32,error){
-	if ids==nil{
-		return 0,errors.New("machineID not find")
-	}
-	return int32(ids.machineID),nil
-}
 
 func SetByteSzie(byteSize string)(error){
 	if byteSize==b_e18{

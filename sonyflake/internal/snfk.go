@@ -98,13 +98,19 @@ func newSonyflake(st Settings) *Sonyflake {
 	return sf
 }
 
-func (sf *Sonyflake) GetMachineID() uint16 {
-	return sf.machineID
+func (sf *Sonyflake) GetMachineID() (uint16,error) {
+	if sf==nil{
+		return 0,errors.New("not init client")
+	}
+	return sf.machineID,nil
 }
 
 // NextID generates a next unique ID.
 // After the Sonyflake time overflows, NextID returns an error.
 func (sf *Sonyflake) NextID() (uint64, error) {
+	if sf==nil{
+		return 0,errors.New("not init client")
+	}
 	const maskSequence = uint16(1<<BitLenSequence - 1)
 
 	sf.mutex.Lock()
