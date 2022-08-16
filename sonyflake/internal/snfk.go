@@ -2,7 +2,6 @@ package internal
 
 import (
 	"errors"
-	"net"
 	"sync"
 	"time"
 )
@@ -22,17 +21,14 @@ const (
 	BitLenSequence  = 13                               // bit length of sequence number
 	BitLenMachineID = 63 - BitLenTime - BitLenSequence // bit length of machine id
 )
-const byteSize_e7 int64 = 1e7 //18   10msec
-const byteSize_e6 int64 = 1e6 //19    1msec
+
 const (
-	b_e18 = "b_18"
-	b_e19 = "b_19"
+	sonyflakeTimeUnit   = 1e6 //size = 19 , nsec, i.e.  1 msec
+	sonyflakeTimeUnitE6 = 1e6 //size = 19 , nsec, i.e.  1 msec
+	sonyflakeTimeUnitE7 = 1e7 //size = 18 , nsec, i.e. 10 msec
+	BSize18e7           = "size_18" //size = 18 , nsec, i.e. 10 msec
+	BSize19e6           = "size_19" //size = 19 , nsec, i.e.  1 msec
 )
-
-var sonyflakeTimeUnit = byteSize_e6
-
-//const sonyflakeTimeUnit = 1e7 // nsec, i.e. 10 msec     size=18 count ~ 70
-//const sonyflakeTimeUnit = 1e6 // nsec, i.e.  1 msec   size=19 count ~ 500
 
 // Settings configures Sonyflake:
 //
@@ -62,6 +58,7 @@ type Sonyflake struct {
 	elapsedTime int64
 	sequence    uint16
 	machineID   uint16
+	size        string
 }
 
 // NewSonyflake returns a new Sonyflake configured with the given Settings.
@@ -69,87 +66,78 @@ type Sonyflake struct {
 // - Settings.StartTime is ahead of the current time.
 // - Settings.MachineID returns an error.
 // - Settings.CheckMachineID returns false.
-func newSonyflake(st Settings) *Sonyflake {
+func newSonyflake(st Settings, size string) *Sonyflake {
 	sf := new(Sonyflake)
 	sf.mutex = new(sync.Mutex)
 	sf.sequence = uint16(1<<BitLenSequence - 1)
-
+	sf.size = size
 	if st.StartTime.After(time.Now()) {
 		return nil
 	}
 	if st.StartTime.IsZero() {
-		sf.startTime = toSonyflakeTime(time.Date(2014, 9, 1, 0, 0, 0, 0, time.UTC))
+		sf.startTime = toSonyflakeTime(time.Date(2014, 9, 1, 0, 0, 0, 0, time.UTC), sf.size)
 	} else {
-		sf.startTime = toSonyflakeTime(st.StartTime)
+		sf.startTime = toSonyflakeTime(st.StartTime, sf.size)
 	}
-
-	var err error
-	if st.MachineID == nil {
-		//sf.machineID, err = lower16BitPrivateIP()
-		sf.machineID, err = lowerPrivateIPv4()
-	} else {
-		sf.machineID, err = st.MachineID()
-	}
-	if err != nil || (st.CheckMachineID != nil && !st.CheckMachineID(sf.machineID)) {
-		return nil
-	}
-	//fmt.Println("machineID=",sf.machineID)
 	return sf
 }
 
-func (sf *Sonyflake) GetMachineID() (uint16,error) {
-	if sf==nil{
-		return 0,errors.New("not init client")
+func (sf *Sonyflake) GetMachineID() (uint16, error) {
+	if sf == nil {
+		return 0, errors.New("not init client")
 	}
-	return sf.machineID,nil
+	return sf.machineID, nil
 }
 
 // NextID generates a next unique ID.
 // After the Sonyflake time overflows, NextID returns an error.
 func (sf *Sonyflake) NextID() (uint64, error) {
-	if sf==nil{
-		return 0,errors.New("not init client")
+	if sf == nil {
+		return 0, errors.New("not init client")
 	}
 	const maskSequence = uint16(1<<BitLenSequence - 1)
 
 	sf.mutex.Lock()
 	defer sf.mutex.Unlock()
 Tag:
-	current := currentElapsedTime(sf.startTime)
+	current := sf.currentElapsedTime(sf.startTime)
 	if sf.elapsedTime < current {
 
 		sf.elapsedTime = current
 		sf.sequence = 0
 	} else { // sf.elapsedTime >= current
 		sf.sequence = (sf.sequence + 1) & maskSequence
-		//fmt.Println(sf.sequence)
 		if sf.sequence == 0 {
-			//fmt.Println(sf.sequence)
-			//overtime := sf.elapsedTime - current
-			//time.Sleep(sleepTime((overtime)))
-			time.Sleep(sleepTimeNS())
+			time.Sleep(sleepTimeNS(sf.size))
 			goto Tag
 		}
-		//fmt.Println(sf.sequence)
 	}
 
 	return sf.toID()
 }
-
-func toSonyflakeTime(t time.Time) int64 {
-	return t.UTC().UnixNano() / sonyflakeTimeUnit
+func (sf *Sonyflake) currentElapsedTime(startTime int64) int64 {
+	return toSonyflakeTime(time.Now(), sf.size) - sf.startTime
 }
 
-func currentElapsedTime(startTime int64) int64 {
-	return toSonyflakeTime(time.Now()) - startTime
+func toSonyflakeTime(t time.Time, size string) int64 {
+	//return t.UTC().UnixNano() / sonyflakeTimeUnit
+	switch size {
+	case BSize18e7:
+		return t.UTC().UnixNano() / sonyflakeTimeUnitE7
+	case BSize19e6:
+		return t.UTC().UnixNano() / sonyflakeTimeUnitE6
+	}
+	return 0
 }
 
-func sleepTime(overtime int64) time.Duration {
-	return time.Duration(overtime)*10*time.Millisecond -
-		time.Duration(time.Now().UTC().UnixNano()%sonyflakeTimeUnit)*time.Nanosecond
-}
-
-func sleepTimeNS() time.Duration {
+func sleepTimeNS(size string) time.Duration {
+	//return time.Duration(1*sonyflakeTimeUnit+10) * time.Nanosecond
+	switch size {
+	case BSize18e7:
+		return time.Duration(1*sonyflakeTimeUnitE7+10) * time.Nanosecond
+	case BSize19e6:
+		return time.Duration(1*sonyflakeTimeUnitE6+10) * time.Nanosecond
+	}
 	return time.Duration(1*sonyflakeTimeUnit+10) * time.Nanosecond
 }
 
@@ -161,49 +149,6 @@ func (sf *Sonyflake) toID() (uint64, error) {
 	return uint64(sf.elapsedTime)<<(BitLenSequence+BitLenMachineID) |
 		uint64(sf.sequence)<<BitLenMachineID |
 		uint64(sf.machineID), nil
-}
-
-func privateIPv4() (net.IP, error) {
-	as, err := net.InterfaceAddrs()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, a := range as {
-		ipnet, ok := a.(*net.IPNet)
-		if !ok || ipnet.IP.IsLoopback() {
-			continue
-		}
-
-		ip := ipnet.IP.To4()
-		if isPrivateIPv4(ip) {
-			return ip, nil
-		}
-	}
-	return nil, errors.New("no private ip address")
-}
-
-func isPrivateIPv4(ip net.IP) bool {
-	return ip != nil &&
-		(ip[0] == 10 || ip[0] == 172 && (ip[1] >= 16 && ip[1] < 32) || ip[0] == 192 && ip[1] == 168)
-}
-
-func lower16BitPrivateIP() (uint16, error) {
-	ip, err := privateIPv4()
-	if err != nil {
-		return 0, err
-	}
-
-	return uint16(ip[2])<<8 + uint16(ip[3]), nil
-}
-
-func lowerPrivateIPv4() (uint16, error) {
-	ip, err := privateIPv4()
-	if err != nil {
-		return 0, err
-	}
-	//fmt.Println(ip[2], ip[3])
-	return uint16(ip[0]) + uint16(ip[1]) + uint16(ip[2]) + uint16(ip[3]), nil
 }
 
 // Decompose returns a set of Sonyflake ID parts.

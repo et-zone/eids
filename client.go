@@ -30,22 +30,22 @@ func getNum(addr string, serID int64) (size string, num uint16, err error) {
 	if err != nil {
 		return "", 0, err
 	}
+	defer r.Body.Close()
 	rv := &req{}
 	json.Unmarshal(b, rv)
 	if rv.Size == 18 {
-		return sonyflake.B_e18, uint16(rv.Num), nil
+		return sonyflake.BSize18e7, uint16(rv.Num), nil
 	}
 	if rv.Size == 19 {
-		return sonyflake.B_e19, uint16(rv.Num), nil
+		return sonyflake.BSize19e6, uint16(rv.Num), nil
 	}
-
 	return "", 0, errors.New("nservID = " + fmt.Sprintf("%v", serID) + " not find ")
 }
 
-func Init(cfg *Config) error {
+func New(cfg *Config) (sonyflake.Client,error) {
 	size, num, err := getNum(cfg.Addr, cfg.SrvID)
 	if err != nil {
-		return err
+		return nil,err
 	}
-	return sonyflake.InitSonyFlakeWithSzie(&num, size)
+	return sonyflake.InitSonyFlake(&num, size)
 }
